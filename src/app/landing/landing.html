@@ -1,0 +1,214 @@
+<div class="landing">
+  <header class="header">
+    <div class="header-brand">
+      <div class="header-mark"></div>
+      <span class="header-name">Valdelumbre</span>
+    </div>
+    <nav class="header-nav">
+      <a href="#explorar">Explorar</a>
+      <a href="#como">Cómo funciona</a>
+      <a href="#ideas">Ideas</a>
+    </nav>
+  </header>
+
+  <section id="explorar" class="hero">
+    <div class="hero-copy">
+      <span class="kicker">Asistente turístico con IA</span>
+      <h1>Pregunta a la ciudad. Te responde con lugares.</h1>
+      <p class="hero-desc">
+        Describe lo que te apetece — un plan, un barrio, un presupuesto — y
+        Valdelumbre te devuelve los puntos de interés que encajan, con horario,
+        precio y ubicación exacta.
+      </p>
+    </div>
+    <div class="hero-form">
+      <label for="query" class="form-label">Tu pregunta</label>
+      <textarea
+        id="query"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        (keydown)="onKeyDown($event)"
+        placeholder="Ej. Quiero ver monumentos accesibles esta tarde"
+        class="form-textarea"
+      ></textarea>
+      <div class="form-actions">
+        <button
+          (click)="ask()"
+          [disabled]="loading()"
+          class="form-submit"
+        >
+          <span>{{ buttonLabel() }}</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="square">
+            <path d="M5 12h14M13 6l6 6-6 6"></path>
+          </svg>
+        </button>
+        <span class="form-hint">Ctrl + Enter para enviar</span>
+      </div>
+      <div id="ideas" class="suggestions">
+        <span class="suggestions-label">Prueba con</span>
+        <div class="suggestions-list">
+          @for (s of suggestions; track s) {
+            <button (click)="pickSuggestion(s)" class="suggestion-chip">{{ s }}</button>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+   <section id="como" class="how-section">
+    <div class="how-header">
+      <h2>Cómo funciona</h2>
+    </div>
+    <div class="how-steps">
+      <div class="step">
+        <span class="step-num">01</span>
+        <h4>Pregunta como hablas</h4>
+        <p>Sin filtros ni menús. Cuéntale a Valdelumbre tu plan, tu presupuesto o el tiempo que tienes.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <h4>La IA elige por ti</h4>
+        <p>Analiza tu pregunta y selecciona los puntos de interés que mejor encajan.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <h4>Ve directo al lugar</h4>
+        <p>Cada resultado trae horario, precio y su ubicación exacta en el mapa.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="results-section">
+    <div class="results-header">
+      <h2>{{ resultsTitle() }}</h2>
+      <span class="results-query">"{{ lastQuery() }}"</span>
+    </div>
+
+    <div class="filters-bar">
+      <div class="filters-row filters-categories">
+        @for (cat of categorias; track cat.key) {
+          <button
+            class="filter-chip"
+            [class.active]="selectedCategorias().has(cat.key)"
+            (click)="toggleCategoria(cat.key)"
+          >{{ cat.label }}</button>
+        }
+      </div>
+      <div class="filters-row filters-options">
+        <label class="filter-toggle">
+          <input
+            type="checkbox"
+            [checked]="filtroAccesible()"
+            (change)="toggleAccesible($any($event.target).checked)"
+          />
+          <span>♿ Accesible</span>
+        </label>
+        <div class="filter-separator"></div>
+        <label class="filter-toggle">
+          <input
+            type="checkbox"
+            [checked]="abiertoAhora()"
+            (change)="toggleAbiertoAhora($any($event.target).checked)"
+            [disabled]="diaManual() !== null || horaManual() !== null"
+          />
+          <span>Abierto ahora</span>
+        </label>
+        <div class="filter-separator"></div>
+        <div class="filter-manual">
+          <select
+            class="filter-select"
+            [value]="diaManual() ?? ''"
+            (change)="onDiaManualChange($any($event.target).value)"
+            [disabled]="abiertoAhora()"
+          >
+            <option value="">Día</option>
+            @for (d of diasSemana; track d.value) {
+              <option [value]="d.value">{{ d.label }}</option>
+            }
+          </select>
+          <input
+            type="time"
+            class="filter-time"
+            [value]="horaManual() ?? ''"
+            (change)="onHoraManualChange($any($event.target).value)"
+            [disabled]="abiertoAhora()"
+          />
+          @if (diaManual() !== null || horaManual() !== null) {
+            <button
+              class="filter-clear-manual"
+              (click)="clearManualTime()"
+            >×</button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- @if (respuesta()) {
+      <div class="results-answer">
+        <p>{{ respuesta() }}</p>
+      </div>
+    } -->
+
+    @if (error()) {
+      <div class="results-error">{{ error() }}</div>
+    }
+
+    @if (loading()) {
+      <div class="results-loading">
+        <div class="loading-dot"></div>
+        <span>Buscando lugares que encajen con tu pregunta…</span>
+      </div>
+    }
+
+    <div class="results-grid" [style.opacity]="gridOpacity()">
+      @for (p of filteredResults(); track p.num) {
+        <article class="poi-card">
+          <div class="poi-card-top">
+            <span class="poi-num">{{ p.num }}</span>
+            <span class="poi-tag">{{ p.categoria }}</span>
+          </div>
+          <div class="poi-card-body">
+            <h3>{{ p.nombre }}</h3>
+            <p class="poi-desc">{{ p.descripcion }}</p>
+          </div>
+          <div class="poi-map-wrapper">
+            <app-poi-map [lat]="p.lat" [lon]="p.lon" />
+            <span class="poi-map-coords">{{ p.coords }}</span>
+          </div>
+          <dl class="poi-details">
+            <dt>Horario</dt>
+            <dd>{{ p.horario }}</dd>
+            <dt>Precio</dt>
+            <dd class="poi-price">{{ p.precio }}</dd>
+            @if (p.accesible) {
+              <dt>Acceso</dt>
+              <dd>♿ Accesible</dd>
+            }
+          </dl>
+        </article>
+      }
+    </div>
+
+    @if (filteredResults().length === 0 && !loading() && !error()) {
+      <div class="results-empty">
+        <p>No hay lugares que coincidan con los filtros seleccionados.</p>
+        <button class="filter-clear-btn" (click)="clearFilters()">Limpiar filtros</button>
+      </div>
+    }
+  </section>
+
+ 
+
+  <footer class="footer">
+    <div class="footer-brand">
+      <div class="footer-mark"></div>
+      <span class="footer-name">Valdelumbre</span>
+      <span class="footer-tagline">· Asistente turístico con IA</span>
+    </div>
+    <div class="footer-links">
+      <a href="#">Privacidad</a>
+      <a href="#">Contacto</a>
+      <span>© 2026</span>
+    </div>
+  </footer>
+</div>

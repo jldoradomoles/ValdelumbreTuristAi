@@ -1,0 +1,42 @@
+{
+  "hook": {
+    "enabled": true,
+    "limits": {
+      "maxFindings": 5,
+      "maxChars": 8000
+    }
+  },
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/*.html"
+        ],
+        "createdAt": "2026-10-27T14:32:34.019Z",
+        "reason": "Decision sketches rendered as skeletons by the decision page; not production artifacts"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/*.html"
+        ],
+        "createdAt": "2026-10-27T14:32:34.068Z",
+        "reason": "Decision sketches rendered as skeletons by the decision page; not production artifacts"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/*.html"
+        ],
+        "createdAt": "2026-10-27T14:42:07.995Z",
+        "reason": "Decision sketches rendered as skeletons by the decision page; not production artifacts"
+      }
+    ]
+  }
+}

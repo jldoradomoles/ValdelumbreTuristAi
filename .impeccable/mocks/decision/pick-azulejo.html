@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Azulejo Tilework — Valdelumbre</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --cobalt:#1A3F8C;--cobalt-light:#2B5BB8;--cobalt-pale:#E8EEF8;
+  --ceramic:#F5F5F0;--white:#FFFFFF;
+  --amber:#D4A246;--amber-light:#EACB7E;
+  --green:#2D6A4F;--terracotta:#C35A3A;
+  --text:#1A1A18;--text-muted:#5C5C56;
+  --border:#D4D0C8;
+}
+html,body{width:1440px;height:900px;overflow:hidden;background:var(--ceramic)}
+body{font-family:'Outfit',system-ui,sans-serif;color:var(--text);display:flex}
+
+/* Nav rail */
+.nav-rail{width:68px;background:var(--cobalt);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:4px}
+.nav-logo{width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.nav-logo svg{width:32px;height:32px;fill:var(--amber)}
+.nav-item{width:48px;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:6px;gap:2px;color:rgba(255,255,255,0.6);font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em}
+.nav-item.active{background:rgba(255,255,255,0.15);color:#fff}
+.nav-item svg{width:20px;height:20px;fill:currentColor}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column}
+
+/* Top bar */
+.topbar{height:68px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;gap:20px}
+.topbar h1{font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;color:var(--cobalt);letter-spacing:-0.01em}
+.search-box{flex:1;max-width:480px;height:40px;background:var(--ceramic);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;padding:0 14px;gap:8px;font-size:14px;color:var(--text-muted)}
+.search-box svg{width:16px;height:16px;fill:var(--cobalt)}
+
+/* Filter tiles */
+.filter-bar{display:flex;gap:6px;margin-left:auto}
+.tile-chip{height:30px;padding:0 12px;border-radius:6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;display:flex;align-items:center;gap:4px;border:1.5px solid var(--border);color:var(--text-muted);background:var(--white)}
+.tile-chip.active{background:var(--cobalt);color:var(--white);border-color:var(--cobalt)}
+.tile-chip.cat-nat{border-color:var(--green);color:var(--green)}
+.tile-chip.cat-gas{border-color:var(--amber);color:var(--amber)}
+.tile-chip.cat-mon{border-color:var(--terracotta);color:var(--terracotta)}
+
+/* Azulejo divider pattern */
+.azulejo-border{height:6px;background:repeating-linear-gradient(90deg,var(--cobalt) 0,var(--cobalt) 12px,var(--ceramic) 12px,var(--ceramic) 14px,var(--cobalt-pale) 14px,var(--cobalt-pale) 26px,var(--ceramic) 26px,var(--ceramic) 28px)}
+
+/* Content */
+.content{flex:1;padding:24px 32px;display:grid;grid-template-columns:1fr 340px;gap:24px;overflow:hidden}
+
+/* POI list */
+.poi-list{display:flex;flex-direction:column;gap:16px;overflow:hidden}
+.section-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--cobalt);padding-bottom:6px;border-bottom:2px solid var(--cobalt-pale);display:flex;justify-content:space-between;align-items:baseline}
+.section-label .count{font-size:11px;color:var(--text-muted);font-weight:500;text-transform:none;letter-spacing:0}
+
+.poi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px}
+.poi-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:16px;position:relative;overflow:hidden}
+.poi-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
+.poi-card.monumento::after{background:var(--terracotta)}
+.poi-card.naturaleza::after{background:var(--green)}
+.poi-card.gastro::after{background:var(--amber)}
+.poi-card.museo::after{background:var(--cobalt)}
+.poi-card .poi-tag{display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:2px 8px;border-radius:4px;margin-bottom:8px}
+.poi-card.monumento .poi-tag{background:rgba(195,90,58,0.1);color:var(--terracotta)}
+.poi-card.naturaleza .poi-tag{background:rgba(45,106,79,0.1);color:var(--green)}
+.poi-card.gastro .poi-tag{background:rgba(212,162,70,0.15);color:var(--amber)}
+.poi-card.museo .poi-tag{background:var(--cobalt-pale);color:var(--cobalt)}
+.poi-card .poi-name{font-size:15px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px}
+.poi-card .poi-desc{font-size:12px;color:var(--text-muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.poi-card .poi-status{margin-top:8px;font-size:11px;font-weight:500}
+.poi-card .open{color:var(--green)}
+
+/* Chat panel */
+.chat-panel{background:var(--white);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;overflow:hidden}
+.chat-header{padding:16px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:600;color:var(--cobalt);display:flex;align-items:center;gap:8px}
+.chat-header svg{width:18px;height:18px;fill:var(--cobalt)}
+.chat-body{flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;overflow:hidden}
+.chat-msg{max-width:85%;padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.5}
+.chat-msg.user{background:var(--cobalt);color:var(--white);align-self:flex-end;border-bottom-right-radius:4px}
+.chat-msg.bot{background:var(--cobalt-pale);color:var(--text);align-self:flex-start;border-bottom-left-radius:4px}
+.chat-input-bar{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px}
+.chat-input{flex:1;height:36px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font-size:13px;font-family:'Outfit',sans-serif;color:var(--text)}
+.chat-send{width:36px;height:36px;background:var(--cobalt);border-radius:8px;border:none;display:flex;align-items:center;justify-content:center}
+.chat-send svg{width:16px;height:16px;fill:white}
+</style>
+</head>
+<body>
+
+<nav class="nav-rail">
+  <div class="nav-logo"><svg viewBox="0 0 24 24"><path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"/></svg></div>
+  <div class="nav-item active"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>TODO</div>
+  <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>MAPA</div>
+  <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>CHAT</div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <h1>Valdelumbre</h1>
+    <div class="search-box">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      ¿Qué quieres descubrir en Valdelumbre?
+    </div>
+    <div class="filter-bar">
+      <div class="tile-chip active">Todos</div>
+      <div class="tile-chip cat-mon">Monumentos</div>
+      <div class="tile-chip cat-nat">Naturaleza</div>
+      <div class="tile-chip cat-gas">Gastronomía</div>
+    </div>
+  </div>
+  <div class="azulejo-border"></div>
+
+  <div class="content">
+    <div class="poi-list">
+      <div>
+        <div class="section-label">Monumentos <span class="count">5 puntos de interés</span></div>
+        <div class="poi-grid">
+          <div class="poi-card monumento">
+            <span class="poi-tag">Monumento</span>
+            <div class="poi-name">Iglesia de San Martín</div>
+            <div class="poi-desc">Templo románico del siglo XII con portada esculpida y retablo barroco.</div>
+            <div class="poi-status open">Abierto · Accesible</div>
+          </div>
+          <div class="poi-card monumento">
+            <span class="poi-tag">Monumento</span>
+            <div class="poi-name">Castillo de Valdelumbre</div>
+            <div class="poi-desc">Fortaleza medieval del siglo XIV con torre del homenaje y murallas.</div>
+            <div class="poi-status open">Abierto</div>
+          </div>
+          <div class="poi-card monumento">
+            <span class="poi-tag">Monumento</span>
+            <div class="poi-name">Puente Romano</div>
+            <div class="poi-desc">Puente de piedra de cinco arcos sobre el río Lumbre.</div>
+            <div class="poi-status open">Siempre abierto · Accesible</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-label">Naturaleza <span class="count">3 puntos de interés</span></div>
+        <div class="poi-grid">
+          <div class="poi-card naturaleza">
+            <span class="poi-tag">Naturaleza</span>
+            <div class="poi-name">Mirador del Valle</div>
+            <div class="poi-desc">Punto panorámico a 890m con vistas al valle del río Lumbre.</div>
+            <div class="poi-status open">Siempre abierto</div>
+          </div>
+          <div class="poi-card naturaleza">
+            <span class="poi-tag">Naturaleza</span>
+            <div class="poi-name">Bosque de Robles</div>
+            <div class="poi-desc">Robledal centenario con sendero circular señalizado de 3.5 km.</div>
+            <div class="poi-status open">Siempre abierto</div>
+          </div>
+          <div class="poi-card naturaleza">
+            <span class="poi-tag">Naturaleza</span>
+            <div class="poi-name">Cascada del Lumbre</div>
+            <div class="poi-desc">Salto de agua de 12m accesible desde el puente romano.</div>
+            <div class="poi-status open">Siempre abierto</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-panel">
+      <div class="chat-header">
+        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        Asistente de Valdelumbre
+      </div>
+      <div class="chat-body">
+        <div class="chat-msg bot">¡Hola! Soy tu guía de Valdelumbre. Pregúntame sobre monumentos, rutas, restaurantes o cualquier cosa del pueblo.</div>
+        <div class="chat-msg user">¿Qué puedo visitar con niños?</div>
+        <div class="chat-msg bot">Para visitar con niños te recomiendo el <strong>Puente Romano</strong> (siempre abierto, accesible) y el <strong>Bosque de Robles</strong> con su sendero circular de 3.5 km. También la <strong>Plaza Mayor</strong> tiene un parque infantil.</div>
+      </div>
+      <div class="chat-input-bar">
+        <div class="chat-input" style="display:flex;align-items:center;color:#5C5C56;font-size:13px">Escribe tu pregunta...</div>
+        <div class="chat-send"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

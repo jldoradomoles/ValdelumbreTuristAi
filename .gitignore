@@ -38,6 +38,13 @@ testem.log
 /typings
 __screenshots__/
 
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+backend/.env
+
 # System files
 .DS_Store
 Thumbs.db

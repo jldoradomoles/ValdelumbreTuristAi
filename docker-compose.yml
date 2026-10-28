@@ -1,0 +1,12 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./references:/app/references:ro
+    environment:
+      - DATA_PATH=/app/references/datos/pois.json
+      - LLM_PROVIDER=${LLM_PROVIDER:-fallback}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ALLOWED_ORIGINS=["http://localhost:4200"]

@@ -1,4 +1,57 @@
-You are an expert in TypeScript, Angular, and scalable web application development. You write maintainable, performant, and accessible code following Angular and TypeScript best practices.
+You are an expert in TypeScript, Angular, Python, FastAPI, and scalable web application development. You write maintainable, performant, and accessible code following best practices.
+
+## Project Overview
+
+Valdelumbre Tourist AI — a tourist assistant for the fictional town of Valdelumbre. Backend API in Python/FastAPI, frontend in Angular.
+
+## Backend (Python/FastAPI)
+
+- Python 3.12+, FastAPI, Pydantic v2, pydantic-settings
+- Data loaded from `references/datos/pois.json` into memory at startup (no database)
+- LLM abstraction: `LLMAssistant` interface with Claude and fallback (keyword matching) implementations
+- `LLM_PROVIDER` env var controls which implementation: `fallback` (default, no API key needed) or `claude`
+- Tests with pytest + pytest-asyncio
+- Run backend: `cd backend && uvicorn app.main:app --reload`
+- Run tests: `cd backend && pytest`
+- Run evaluation: `cd backend && python -m scripts.evaluate --internal`
+- Docker: `docker compose up` from project root
+
+### Backend Structure
+
+```
+backend/app/
+  main.py           # FastAPI app, lifespan, CORS
+  config.py         # Settings via pydantic-settings
+  models/poi.py     # Domain models (POI, Precio, Horario, etc.)
+  models/api.py     # API request/response schemas
+  data/loader.py    # JSON loading with data cleaning
+  data/store.py     # In-memory POI store
+  routers/pois.py   # GET /pois, GET /pois/{id}
+  routers/preguntar.py  # POST /preguntar
+  services/filter_service.py  # Filtering logic
+  services/assistant_service.py  # Orchestrates LLM calls
+  llm/base.py       # Abstract LLMAssistant interface
+  llm/claude.py     # Claude implementation
+  llm/fallback.py   # Keyword-matching fallback
+  llm/factory.py    # Factory based on LLM_PROVIDER
+```
+
+### Data Cleaning (applied at load time, original JSON untouched)
+
+- poi-004: discarded (duplicate of poi-003)
+- poi-011: lat/lon swapped
+- poi-013: prompt injection stripped from description
+- Prices normalized to typed `Precio` model
+- poi-018: `horario_desconocido=True` (always_open=false + empty franjas)
+
+## Python Best Practices
+
+- Use type hints everywhere
+- Use Pydantic models for data validation
+- Use `async` for I/O-bound operations
+- Use `pydantic-settings` for configuration
+- Keep business logic in services, not in routers
+- Use pytest fixtures for test setup
 
 ## TypeScript Best Practices
 

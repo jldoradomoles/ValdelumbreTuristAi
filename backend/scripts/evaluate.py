@@ -68,13 +68,18 @@ def _check(question: dict, returned_pois: list[str]) -> dict:
     missing = expected_include - returned_set
     wrongly_included = expected_exclude & returned_set
 
-    passed = len(missing) == 0 and len(wrongly_included) == 0
+    if not expected_include and not expected_exclude:
+        passed = len(returned_pois) == 0
+    else:
+        passed = len(missing) == 0 and len(wrongly_included) == 0
 
     return {
         "id": question["id"],
         "pregunta": question["pregunta"],
         "passed": passed,
         "returned": returned_pois,
+        "expected_include": sorted(expected_include),
+        "expected_exclude": sorted(expected_exclude),
         "missing": sorted(missing),
         "wrongly_included": sorted(wrongly_included),
     }
@@ -91,11 +96,13 @@ def print_report(results: list[dict]) -> None:
     for r in results:
         status = "PASS" if r["passed"] else "FAIL"
         print(f"\n[{status}] {r['id']}: {r['pregunta']}")
-        print(f"       POIs devueltos: {r['returned']}")
+        print(f"       POIs devueltos:  {r['returned']}")
+        print(f"       Esperados:       {r['expected_include']}")
+        print(f"       Excluidos:       {r['expected_exclude']}")
         if r["missing"]:
-            print(f"       Faltan (esperados): {r['missing']}")
+            print(f"       ✗ Faltan (esperados): {r['missing']}")
         if r["wrongly_included"]:
-            print(f"       Incluidos indebidamente: {r['wrongly_included']}")
+            print(f"       ✗ Incluidos indebidamente: {r['wrongly_included']}")
 
     print("\n" + "-" * 60)
     print(f"Resultado: {passed}/{total} preguntas correctas ({passed/total*100:.0f}%)")

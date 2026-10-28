@@ -55,17 +55,99 @@
     </div>
   </section>
 
+   <section id="como" class="how-section">
+    <div class="how-header">
+      <h2>Cómo funciona</h2>
+    </div>
+    <div class="how-steps">
+      <div class="step">
+        <span class="step-num">01</span>
+        <h4>Pregunta como hablas</h4>
+        <p>Sin filtros ni menús. Cuéntale a Valdelumbre tu plan, tu presupuesto o el tiempo que tienes.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <h4>La IA elige por ti</h4>
+        <p>Analiza tu pregunta y selecciona los puntos de interés que mejor encajan.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <h4>Ve directo al lugar</h4>
+        <p>Cada resultado trae horario, precio y su ubicación exacta en el mapa.</p>
+      </div>
+    </div>
+  </section>
+
   <section class="results-section">
     <div class="results-header">
       <h2>{{ resultsTitle() }}</h2>
       <span class="results-query">"{{ lastQuery() }}"</span>
     </div>
 
-    @if (respuesta()) {
+    <div class="filters-bar">
+      <div class="filters-row filters-categories">
+        @for (cat of categorias; track cat.key) {
+          <button
+            class="filter-chip"
+            [class.active]="selectedCategorias().has(cat.key)"
+            (click)="toggleCategoria(cat.key)"
+          >{{ cat.label }}</button>
+        }
+      </div>
+      <div class="filters-row filters-options">
+        <label class="filter-toggle">
+          <input
+            type="checkbox"
+            [checked]="filtroAccesible()"
+            (change)="toggleAccesible($any($event.target).checked)"
+          />
+          <span>♿ Accesible</span>
+        </label>
+        <div class="filter-separator"></div>
+        <label class="filter-toggle">
+          <input
+            type="checkbox"
+            [checked]="abiertoAhora()"
+            (change)="toggleAbiertoAhora($any($event.target).checked)"
+            [disabled]="diaManual() !== null || horaManual() !== null"
+          />
+          <span>Abierto ahora</span>
+        </label>
+        <div class="filter-separator"></div>
+        <div class="filter-manual">
+          <select
+            class="filter-select"
+            [value]="diaManual() ?? ''"
+            (change)="onDiaManualChange($any($event.target).value)"
+            [disabled]="abiertoAhora()"
+          >
+            <option value="">Día</option>
+            @for (d of diasSemana; track d.value) {
+              <option [value]="d.value">{{ d.label }}</option>
+            }
+          </select>
+          <input
+            type="time"
+            class="filter-time"
+            [value]="horaManual() ?? ''"
+            (change)="onHoraManualChange($any($event.target).value)"
+            [disabled]="abiertoAhora()"
+          />
+          @if (diaManual() !== null || horaManual() !== null) {
+            <button
+              class="filter-clear-manual"
+              (click)="clearManualTime()"
+            >×</button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- @if (respuesta()) {
       <div class="results-answer">
         <p>{{ respuesta() }}</p>
       </div>
-    }
+    } -->
 
     @if (error()) {
       <div class="results-error">{{ error() }}</div>
@@ -79,7 +161,7 @@
     }
 
     <div class="results-grid" [style.opacity]="gridOpacity()">
-      @for (p of results(); track p.num) {
+      @for (p of filteredResults(); track p.num) {
         <article class="poi-card">
           <div class="poi-card-top">
             <span class="poi-num">{{ p.num }}</span>
@@ -106,30 +188,16 @@
         </article>
       }
     </div>
+
+    @if (filteredResults().length === 0 && !loading() && !error()) {
+      <div class="results-empty">
+        <p>No hay lugares que coincidan con los filtros seleccionados.</p>
+        <button class="filter-clear-btn" (click)="clearFilters()">Limpiar filtros</button>
+      </div>
+    }
   </section>
 
-  <section id="como" class="how-section">
-    <div class="how-header">
-      <h2>Cómo funciona</h2>
-    </div>
-    <div class="how-steps">
-      <div class="step">
-        <span class="step-num">01</span>
-        <h4>Pregunta como hablas</h4>
-        <p>Sin filtros ni menús. Cuéntale a Valdelumbre tu plan, tu presupuesto o el tiempo que tienes.</p>
-      </div>
-      <div class="step">
-        <span class="step-num">02</span>
-        <h4>La IA elige por ti</h4>
-        <p>Analiza tu pregunta y selecciona los puntos de interés que mejor encajan.</p>
-      </div>
-      <div class="step">
-        <span class="step-num">03</span>
-        <h4>Ve directo al lugar</h4>
-        <p>Cada resultado trae horario, precio y su ubicación exacta en el mapa.</p>
-      </div>
-    </div>
-  </section>
+ 
 
   <footer class="footer">
     <div class="footer-brand">

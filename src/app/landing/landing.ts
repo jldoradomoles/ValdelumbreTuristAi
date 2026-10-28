@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { ApiService } from '../services/api.service';
+import { ApiService, ListPoisParams } from '../services/api.service';
 import { Horario, POIResponse, Precio } from '../models/poi.model';
 import { PoiMap } from './poi-map';
 
@@ -41,12 +41,46 @@ export class Landing {
   readonly results = signal<DisplayPOI[]>([]);
   readonly respuesta = signal('');
 
+  readonly selectedCategorias = signal<Set<string>>(new Set());
+  readonly filtroAccesible = signal(false);
+  readonly abiertoAhora = signal(false);
+  readonly diaManual = signal<string | null>(null);
+  readonly horaManual = signal<string | null>(null);
+  private readonly isAiMode = signal(false);
+
+  readonly categorias = [
+    { key: 'espacio_publico', label: 'Espacio público' },
+    { key: 'gastronomia', label: 'Gastronomía' },
+    { key: 'monumento', label: 'Monumento' },
+    { key: 'museo', label: 'Museo' },
+    { key: 'naturaleza', label: 'Naturaleza' },
+    { key: 'ruta', label: 'Ruta' },
+    { key: 'servicio', label: 'Servicio' },
+  ];
+
+  readonly diasSemana = [
+    { value: 'L', label: 'Lunes' },
+    { value: 'M', label: 'Martes' },
+    { value: 'X', label: 'Miércoles' },
+    { value: 'J', label: 'Jueves' },
+    { value: 'V', label: 'Viernes' },
+    { value: 'S', label: 'Sábado' },
+    { value: 'D', label: 'Domingo' },
+  ];
+
+  readonly filteredResults = computed(() => {
+    const pois = this.results();
+    const cats = this.selectedCategorias();
+    if (cats.size === 0) return pois;
+    return pois.filter((p) => cats.has(p.categoria));
+  });
+
   readonly gridOpacity = computed(() => (this.loading() ? 0.35 : 1));
   readonly buttonLabel = computed(() =>
     this.loading() ? 'Buscando…' : 'Preguntar',
   );
   readonly resultsTitle = computed(() => {
-    const count = this.results().length;
+    const count = this.filteredResults().length;
     return `${count} lugares en Valdelumbre`;
   });
 
@@ -59,6 +93,7 @@ export class Landing {
 
   constructor() {
     this.loadInitialPois();
+    this.logLlmProvider();
   }
 
   onKeyDown(event: KeyboardEvent): void {
@@ -77,12 +112,15 @@ export class Landing {
     const question = (overrideQuery ?? this.query()).trim();
     if (!question || this.loading()) return;
 
+    this.clearFilters();
+    this.isAiMode.set(true);
     this.loading.set(true);
     this.error.set('');
     this.lastQuery.set(question);
 
     this.api.preguntar({ pregunta: question }).subscribe({
       next: (res) => {
+        console.log(`[Valdelumbre AI] Respuesta generada con LLM provider: ${res.llm_provider}`);
         this.respuesta.set(res.respuesta);
         if (res.pois.length > 0) {
           this.fetchPoisByIds(res.pois);
@@ -100,14 +138,117 @@ export class Landing {
     });
   }
 
-  private loadInitialPois(): void {
-    this.api.listPois().subscribe({
-      next: (res) => {
-        this.results.set(
-          res.pois.slice(0, 6).map((p, i) => this.toDisplay(p, i)),
-        );
+  toggleCategoria(key: string): void {
+    this.switchToExploreMode();
+    this.selectedCategorias.update((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }
+
+  toggleAccesible(checked: boolean): void {
+    this.switchToExploreMode();
+    this.filtroAccesible.set(checked);
+    this.loadPois();
+  }
+
+  toggleAbiertoAhora(checked: boolean): void {
+    this.switchToExploreMode();
+    this.abiertoAhora.set(checked);
+    if (checked) {
+      this.diaManual.set(null);
+      this.horaManual.set(null);
+    }
+    this.loadPois();
+  }
+
+  onDiaManualChange(value: string): void {
+    this.switchToExploreMode();
+    this.diaManual.set(value || null);
+    this.abiertoAhora.set(false);
+    this.loadPois();
+  }
+
+  onHoraManualChange(value: string): void {
+    this.switchToExploreMode();
+    this.horaManual.set(value || null);
+    this.abiertoAhora.set(false);
+    this.loadPois();
+  }
+
+  clearManualTime(): void {
+    this.diaManual.set(null);
+    this.horaManual.set(null);
+    this.loadPois();
+  }
+
+  clearFilters(): void {
+    this.selectedCategorias.set(new Set());
+    this.filtroAccesible.set(false);
+    this.abiertoAhora.set(false);
+    this.diaManual.set(null);
+    this.horaManual.set(null);
+  }
+
+  private switchToExploreMode(): void {
+    if (this.isAiMode()) {
+      this.isAiMode.set(false);
+      this.respuesta.set('');
+      this.lastQuery.set('Explorando Valdelumbre');
+      this.loadPois();
+    }
+  }
+
+  private logLlmProvider(): void {
+    this.api.getInfo().subscribe({
+      next: (info) => {
+        const label = info.llm_provider === 'claude' ? 'Claude (API)' : 'Fallback (keyword matching)';
+        console.log(`[Valdelumbre AI] LLM Provider activo: ${label} (${info.llm_provider})`);
       },
     });
+  }
+
+  private loadInitialPois(): void {
+    this.loadPois();
+  }
+
+  private loadPois(): void {
+    const params: ListPoisParams = {};
+    if (this.filtroAccesible()) {
+      params.accesible = true;
+    }
+    const abiertoEn = this.buildAbiertoEn();
+    if (abiertoEn) {
+      params.abierto_en = abiertoEn;
+    }
+    this.api.listPois(params).subscribe({
+      next: (res) => {
+        this.results.set(res.pois.map((p, i) => this.toDisplay(p, i)));
+      },
+    });
+  }
+
+  private buildAbiertoEn(): string | undefined {
+    if (this.abiertoAhora()) {
+      const now = new Date();
+      const dayInitials: Record<number, string> = { 1: 'L', 2: 'M', 3: 'X', 4: 'J', 5: 'V', 6: 'S', 7: 'D' };
+      const jsDay = now.getDay();
+      const day = dayInitials[jsDay === 0 ? 7 : jsDay];
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      return `${day}-${hh}:${mm}`;
+    }
+    const dia = this.diaManual();
+    const hora = this.horaManual();
+    if (dia && hora) {
+      return `${dia}-${hora}`;
+    }
+    return undefined;
   }
 
   private fetchPoisByIds(ids: string[]): void {
@@ -146,7 +287,7 @@ export class Landing {
     if (horario.always_open) return 'Siempre abierto';
     if (horario.franjas.length === 0) return 'Consultar horario';
 
-    const DAY_NAMES = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    const DAY_NAMES: Record<number, string> = { 1: 'L', 2: 'M', 3: 'X', 4: 'J', 5: 'V', 6: 'S', 7: 'D' };
     return horario.franjas
       .map((f) => {
         const dias = f.dias.map((d) => DAY_NAMES[d] ?? '?').join(', ');

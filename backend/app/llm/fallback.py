@@ -12,6 +12,11 @@ ACCESSIBILITY_KEYWORDS = {
     "en": ["accessible", "wheelchair", "disability", "reduced mobility"],
 }
 
+FREE_KEYWORDS = {
+    "es": ["gratis", "gratuito", "gratuita", "gratuitos", "gratuitas", "sin coste", "sin costo", "entrada libre"],
+    "en": ["free", "no cost", "no charge", "free of charge", "no fee"],
+}
+
 DAY_KEYWORDS_ES: dict[str, int] = {
     "lunes": 1, "martes": 2, "miércoles": 3, "miercoles": 3,
     "jueves": 4, "viernes": 5, "sábado": 6, "sabado": 6, "domingo": 7,
@@ -34,14 +39,24 @@ class FallbackAssistant(LLMAssistant):
     ) -> AssistantAnswer:
         q_lower = question.lower()
 
-        day, t = _extract_day_time(q_lower, idioma)
-        if day is not None and t is not None:
-            filtered = [p for p in candidate_pois if is_open_at(p, day, t)]
-        else:
-            filtered = _score_candidates(q_lower, idioma, candidate_pois)
+        candidates = candidate_pois
+        has_structural_filter = False
+
+        if _mentions_free(q_lower, idioma):
+            candidates = [p for p in candidates if p.precio.tipo == "gratis"]
+            has_structural_filter = True
 
         if _mentions_accessibility(q_lower, idioma):
-            filtered = [p for p in filtered if p.accesible is True]
+            candidates = [p for p in candidates if p.accesible is True]
+            has_structural_filter = True
+
+        day, t = _extract_day_time(q_lower, idioma)
+        if day is not None and t is not None:
+            filtered = [p for p in candidates if is_open_at(p, day, t)]
+        else:
+            filtered = _score_candidates(q_lower, idioma, candidates)
+            if not filtered and has_structural_filter:
+                filtered = candidates
 
         if not filtered:
             text = (
@@ -71,9 +86,11 @@ STOP_WORDS = {
     "es": {"qué", "que", "hay", "un", "una", "el", "la", "los", "las", "de", "del",
            "en", "con", "por", "para", "a", "al", "es", "está", "son", "dónde", "donde",
            "cómo", "como", "cuál", "cual", "algún", "algun", "alguna", "puedo", "puede",
-           "sitio", "lugar", "visitar", "abierto", "abierta"},
+           "sitio", "sitios", "lugar", "lugares", "visitar", "ver", "conocer",
+           "abierto", "abierta", "todos", "todas", "dime", "sean", "algo",
+           "gratis", "gratuito", "gratuita", "gratuitos", "gratuitas"},
     "en": {"what", "where", "is", "are", "the", "a", "an", "to", "do", "with",
-           "can", "i", "something", "any", "some", "there"},
+           "can", "i", "something", "any", "some", "there", "free"},
 }
 
 SYNONYMS: dict[str, list[str]] = {
@@ -159,6 +176,11 @@ def _score_candidates(q: str, idioma: str, candidates: list[POI]) -> list[POI]:
 
 def _mentions_accessibility(q: str, idioma: str) -> bool:
     keywords = ACCESSIBILITY_KEYWORDS.get(idioma, ACCESSIBILITY_KEYWORDS["es"])
+    return any(kw in q for kw in keywords)
+
+
+def _mentions_free(q: str, idioma: str) -> bool:
+    keywords = FREE_KEYWORDS.get(idioma, FREE_KEYWORDS["es"])
     return any(kw in q for kw in keywords)
 
 

@@ -1,6 +1,6 @@
 # SPEC 02 — Listado completo de POIs con filtros
 
-**Estado:** aprobado
+**Estado:** implementado
 **Fecha:** 2026-10-28
 **Depende de:** SPEC 01
 **Objetivo:** Mostrar los 17 POIs en la landing actual con filtros por categoría (multi-selección), accesibilidad y abierto ahora/en momento concreto.
@@ -58,6 +58,7 @@ interface FilterState {
    - Toggle/checkbox "♿ Accesible"
    - Checkbox "Abierto ahora" + selector manual de día (dropdown con L/M/X/J/V/S/D) y hora (input time o dropdown HH:MM)
    - Cuando "Abierto ahora" está activo, el selector manual se deshabilita (y viceversa)
+   - Botón "×" junto al selector manual para limpiar día/hora y volver al estado sin filtro de horario
 
 3. **Lógica de filtrado en el componente** — Señales (`signal`) para el estado de filtros. `computed()` que combina los filtros:
    - Categoría: filtrado en cliente sobre los POIs ya cargados

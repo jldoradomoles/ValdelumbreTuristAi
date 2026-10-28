@@ -44,6 +44,8 @@ POI_TEMPLATE = """\
 
 class ClaudeAssistant(LLMAssistant):
     def __init__(self, api_key: str, model: str = "claude-sonnet-4-20250514") -> None:
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY is required when LLM_PROVIDER=claude")
         self._client = anthropic.AsyncAnthropic(api_key=api_key)
         self._model = model
 
@@ -60,12 +62,17 @@ class ClaudeAssistant(LLMAssistant):
             f"Pregunta del usuario: {question}"
         )
 
-        response = await self._client.messages.create(
-            model=self._model,
-            max_tokens=1024,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_msg}],
-        )
+        try:
+            response = await self._client.messages.create(
+                model=self._model,
+                max_tokens=1024,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_msg}],
+            )
+        except anthropic.BadRequestError as exc:
+            raise RuntimeError(f"Claude API error: {exc.message}") from exc
+        except anthropic.AuthenticationError as exc:
+            raise RuntimeError("ANTHROPIC_API_KEY inválida o sin permisos") from exc
 
         raw = response.content[0].text
         return _parse_response(raw)

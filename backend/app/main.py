@@ -29,5 +29,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/info")
+async def info():
+    return {"llm_provider": settings.LLM_PROVIDER}
+
+
 app.include_router(pois.router)
 app.include_router(preguntar.router)

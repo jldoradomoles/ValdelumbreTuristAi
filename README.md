@@ -147,8 +147,6 @@ python -m scripts.evaluate
 # Sin servidor (usa TestClient internamente)
 python -m scripts.evaluate --internal
 
-# Contra otro host
-python -m scripts.evaluate --base-url http://host:puerto
 ```
 
 ## Decisiones tomadas
@@ -164,8 +162,6 @@ python -m scripts.evaluate --base-url http://host:puerto
 
 ## Qué haría con más tiempo
 
-- Frontend Angular completo con caja de preguntas, fichas de POIs y filtros
-- Mapa sencillo con los puntos de interés
 - Soporte de temporada en el filtro `abierto_en` (actualmente se ignora el campo `temporada` de las franjas horarias)
 - Cache de respuestas del LLM para preguntas frecuentes
 - Rate limiting en el endpoint `/preguntar`

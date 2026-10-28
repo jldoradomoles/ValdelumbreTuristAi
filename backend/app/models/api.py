@@ -34,3 +34,4 @@ class PreguntarRequest(BaseModel):
 class PreguntarResponse(BaseModel):
     respuesta: str
     pois: list[str]
+    llm_provider: str = ""

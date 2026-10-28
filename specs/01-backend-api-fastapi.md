@@ -1,6 +1,6 @@
 # SPEC 01 — Backend API con FastAPI
 
-**Estado:** aprobado
+**Estado:** implementado
 **Fecha:** 2026-10-27
 **Depende de:** —
 **Objetivo:** Crear un backend Python con FastAPI que exponga los endpoints `GET /pois`, `GET /pois/{id}` y `POST /preguntar`, leyendo los datos del JSON de puntos de interés y usando un LLM (Claude) para generar respuestas.

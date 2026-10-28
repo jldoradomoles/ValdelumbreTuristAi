@@ -44,4 +44,9 @@ export interface PreguntarRequest {
 export interface PreguntarResponse {
   respuesta: string;
   pois: string[];
+  llm_provider: string;
+}
+
+export interface AppInfo {
+  llm_provider: string;
 }
